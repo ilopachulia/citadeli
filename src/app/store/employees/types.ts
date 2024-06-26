@@ -1,8 +1,8 @@
 export interface Employee {
-  birthday: Date;
+  birthday: string;
   created_at: string;
   firstname: string;
-  gender: "male" | "female" | "other";
+  gender: "male" | "female";
   id: number;
   lastname: string;
   salary: number;

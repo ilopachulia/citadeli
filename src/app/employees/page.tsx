@@ -5,39 +5,43 @@ import { useGate, useUnit } from "effector-react";
 import {
   $employees,
   $fetchingEmployees,
+  $filteringEmployees,
+  $genderFilters,
+  $isModalOpen,
+  $lastNameFilters,
+  $nameFilters,
   MembersPageGate,
+  employeeDeleted,
   employeesFiltered,
+  modalClosed,
+  modalOpened,
 } from "../store/employees";
-import { Table } from "antd";
+import { Button, Modal, Popconfirm, Table } from "antd";
 import { Spin } from "antd";
+import { EmployeeForm } from "../components/employee-form";
 
 export default function EmployeesPage() {
   useGate(MembersPageGate);
 
+  const [isModalOpen, openModal, closeModal] = useUnit([
+    $isModalOpen,
+    modalOpened,
+    modalClosed,
+  ]);
   const employees = useUnit($employees);
+  const deleteEmployee = useUnit(employeeDeleted);
   const isLoading = useUnit($fetchingEmployees);
   const filterEmployees = useUnit(employeesFiltered);
+  const isFiltering = useUnit($filteringEmployees);
+  const { nameFilters, lastNameFilters, genderFilters } = useUnit({
+    nameFilters: $nameFilters,
+    lastNameFilters: $lastNameFilters,
+    genderFilters: $genderFilters,
+  });
 
-  const nameFilters = [...new Set(employees.map((emp) => emp.firstname))].map(
-    (name) => ({
-      text: name,
-      value: name,
-    })
-  );
-
-  const lastNameFilters = [
-    ...new Set(employees.map((emp) => emp.lastname)),
-  ].map((name) => ({
-    text: name,
-    value: name,
-  }));
-
-  const genderFilters = [...new Set(employees.map((emp) => emp.gender))].map(
-    (name) => ({
-      text: name,
-      value: name,
-    })
-  );
+  const handleEdit = (id: Employee["id"]) => {
+    console.log(id);
+  };
 
   const columns: ColumnsType<Employee> = [
     {
@@ -66,7 +70,28 @@ export default function EmployeesPage() {
     { title: "დაბადების თარიღი", dataIndex: "birthday", key: "birthday" },
     { title: "შეიქმნა", dataIndex: "created_at", key: "created_at" },
     { title: "ხელფასი", dataIndex: "salary", key: "salary" },
+    {
+      title: "რედაქტირება",
+      dataIndex: "edit",
+      render: (_, record) =>
+        employees.length >= 1 ? (
+          <div className="flex items-center gap-2">
+            <Button onClick={() => handleEdit(record.id)}>Edit</Button>
+
+            <Popconfirm
+              title="გსურთ წაშლა?"
+              onConfirm={() => deleteEmployee(record.id)}
+            >
+              <Button>Delete</Button>
+            </Popconfirm>
+          </div>
+        ) : null,
+    },
   ];
+
+  const handleAddEmployee = () => {
+    openModal();
+  };
 
   if (isLoading) {
     return (
@@ -78,15 +103,32 @@ export default function EmployeesPage() {
 
   return (
     <main className="w-screen h-screen">
-      <Table
-        columns={columns}
-        dataSource={employees}
-        onChange={(_, filters) => {
-          console.log(filters);
+      <div className="flex flex-col gap-5 p-3">
+        <Button type="primary" className="self-end" onClick={handleAddEmployee}>
+          ახალი თანამშრომლის დამატება
+        </Button>
 
-          filterEmployees(filters);
-        }}
-      />
+        <Table
+          rowKey={(row) => row.id}
+          loading={isFiltering}
+          columns={columns}
+          dataSource={employees}
+          scroll={{ y: 500 }}
+          onChange={(_, filters) => {
+            filterEmployees(filters);
+          }}
+        />
+      </div>
+
+      <Modal
+        destroyOnClose
+        open={isModalOpen}
+        onCancel={() => closeModal()}
+        onOk={() => closeModal()}
+        footer={null}
+      >
+        <EmployeeForm onClose={closeModal} />
+      </Modal>
     </main>
   );
 }
