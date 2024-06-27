@@ -1,4 +1,4 @@
-import { createEffect, sample } from "effector";
+import { attach, createEffect, sample } from "effector";
 import { app } from "../app/app";
 import { Employee } from "./types";
 import { createGate } from "effector-react";
@@ -14,6 +14,9 @@ export const MembersPageGate = createGate();
 //for storing employees data
 export const $employees = employees.createStore<Employee[]>([]);
 
+//for editing employee's data
+export const $selectedEmployee = employees.createStore<Employee | null>(null);
+
 //for storing filters data
 export const $nameFilters = employees.createStore<
   { text: string; value: string }[]
@@ -28,7 +31,6 @@ export const $genderFilters = employees.createStore<
 >([]);
 
 //delete event and request
-
 export const employeeDeleted = employees.createEvent<Employee["id"]>();
 
 export const deleteEmployeeFx = createEffect(async (id: Employee["id"]) => {
@@ -62,6 +64,10 @@ sample({
   },
   target: $employees,
 });
+
+// set selected employee and request
+export const employeeSelected = employees.createEvent<Employee | null>();
+$selectedEmployee.on(employeeSelected, (_, employee) => employee);
 
 //filter event and request
 
@@ -97,6 +103,14 @@ sample({
     return false;
   },
   target: $isModalOpen,
+});
+
+sample({
+  clock: modalClosed,
+  fn() {
+    return null;
+  },
+  target: $selectedEmployee,
 });
 
 sample({
@@ -232,4 +246,64 @@ sample({
 sample({
   clock: createEmployeFx.doneData,
   target: modalClosed,
+});
+
+export const employeeEdited = employees.createEvent<Employee>();
+
+export const editEmployeFx = attach({
+  source: $selectedEmployee,
+  effect: editEmployeeEffect,
+});
+
+async function editEmployeeEffect(
+  selectedEmployee: Employee | null,
+  body: Employee
+): Promise<Employee> {
+  if (!selectedEmployee) {
+    throw new Error("No employee selected to edit");
+  }
+
+  const { id } = selectedEmployee;
+
+  try {
+    const response = await fetch(
+      `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members/${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to update employee");
+    }
+
+    return (await response.json()) as Employee;
+  } catch (error) {
+    console.error("Error updating employee:", error);
+    throw error;
+  }
+}
+
+sample({
+  clock: employeeEdited,
+  target: editEmployeFx,
+});
+
+sample({
+  clock: editEmployeFx.doneData,
+  target: modalClosed,
+});
+
+sample({
+  clock: editEmployeFx.doneData,
+  source: $employees,
+  fn: (currentEmployees, editedEmployee) =>
+    currentEmployees.map((emp) =>
+      emp.id === editedEmployee.id ? editedEmployee : emp
+    ),
+  target: $employees,
 });

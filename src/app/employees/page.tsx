@@ -10,8 +10,10 @@ import {
   $isModalOpen,
   $lastNameFilters,
   $nameFilters,
+  $selectedEmployee,
   MembersPageGate,
   employeeDeleted,
+  employeeSelected,
   employeesFiltered,
   modalClosed,
   modalOpened,
@@ -29,6 +31,8 @@ export default function EmployeesPage() {
     modalClosed,
   ]);
   const employees = useUnit($employees);
+  const selectedEmployee = useUnit($selectedEmployee);
+  const selectEmployee = useUnit(employeeSelected);
   const deleteEmployee = useUnit(employeeDeleted);
   const isLoading = useUnit($fetchingEmployees);
   const filterEmployees = useUnit(employeesFiltered);
@@ -38,10 +42,6 @@ export default function EmployeesPage() {
     lastNameFilters: $lastNameFilters,
     genderFilters: $genderFilters,
   });
-
-  const handleEdit = (id: Employee["id"]) => {
-    console.log(id);
-  };
 
   const columns: ColumnsType<Employee> = [
     {
@@ -76,7 +76,7 @@ export default function EmployeesPage() {
       render: (_, record) =>
         employees.length >= 1 ? (
           <div className="flex items-center gap-2">
-            <Button onClick={() => handleEdit(record.id)}>Edit</Button>
+            <Button onClick={() => handleEdit(record)}>Edit</Button>
 
             <Popconfirm
               title="გსურთ წაშლა?"
@@ -90,6 +90,11 @@ export default function EmployeesPage() {
   ];
 
   const handleAddEmployee = () => {
+    openModal();
+  };
+
+  const handleEdit = (employee: Employee) => {
+    selectEmployee(employee);
     openModal();
   };
 
@@ -127,7 +132,10 @@ export default function EmployeesPage() {
         onOk={() => closeModal()}
         footer={null}
       >
-        <EmployeeForm onClose={closeModal} />
+        <EmployeeForm
+          selectedEmployee={selectedEmployee}
+          onClose={closeModal}
+        />
       </Modal>
     </main>
   );

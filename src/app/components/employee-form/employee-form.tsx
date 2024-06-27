@@ -1,8 +1,10 @@
 "use client";
 import { Button, DatePicker, Form, FormProps, Input, Radio } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import { useUnit } from "effector-react";
-import { employeeCreated } from "@/app/store/employees";
+import { employeeCreated, employeeEdited } from "@/app/store/employees";
+import { Employee } from "@/app/store/employees/types";
+import moment from "moment";
 
 type FieldType = {
   firstname?: string;
@@ -14,21 +16,34 @@ type FieldType = {
 
 export interface EmployeeFormProps {
   onClose: () => void;
+  selectedEmployee: Employee | null;
 }
 
 export const EmployeeForm = (props: EmployeeFormProps) => {
-  const { onClose } = props;
+  const { onClose, selectedEmployee } = props;
+  const [form] = Form.useForm();
 
   const onCreate = useUnit(employeeCreated);
+  const onEdit = useUnit(employeeEdited);
+
+  if (selectedEmployee) {
+    form.setFieldsValue({
+      ...selectedEmployee,
+      birthday: selectedEmployee.birthday
+        ? moment(selectedEmployee.birthday)
+        : null,
+    });
+  }
 
   return (
     <Form
+      form={form}
       name="basic"
       layout="vertical"
       labelCol={{ span: 8 }}
       wrapperCol={{ span: 16 }}
       style={{ maxWidth: 600 }}
-      onFinish={onCreate}
+      onFinish={selectedEmployee ? onEdit : onCreate}
       autoComplete="off"
     >
       <Form.Item<FieldType>
@@ -78,7 +93,7 @@ export const EmployeeForm = (props: EmployeeFormProps) => {
         </Button>
 
         <Button type="primary" htmlType="submit">
-          დამატება
+          {selectedEmployee ? "რედაქტირება" : "დამატება"}
         </Button>
       </div>
     </Form>
