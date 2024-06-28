@@ -43,8 +43,6 @@ export const TaskForm = (props: TaskFormProps) => {
     });
   }
 
-  const handleAssigneeChange = () => {};
-
   return (
     <Form
       form={form}
@@ -67,7 +65,7 @@ export const TaskForm = (props: TaskFormProps) => {
         label="პასუხისმგებელი პირი"
         name="assigned_member_id"
       >
-        <Select onChange={handleAssigneeChange} options={assigneeOptions} />
+        <Select options={assigneeOptions} />
       </Form.Item>
 
       <Form.Item<FieldType>
