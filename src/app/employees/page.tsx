@@ -116,8 +116,11 @@ export default function EmployeesPage() {
     <main className="w-screen h-screen">
       <div className="flex flex-col gap-5 p-3">
         <div className="flex justify-between items-center">
-          <Link href="/" className="text-blue-500 hover:underline text-xl">
-            Home
+          <Link
+            href="/tasks"
+            className="text-blue-500 hover:underline text-xl"
+          >
+            <span>{"Tasks' Page"}</span>
           </Link>
           <Button
             type="primary"
