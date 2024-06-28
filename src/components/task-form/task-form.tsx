@@ -87,13 +87,7 @@ export const TaskForm = (props: TaskFormProps) => {
         </Radio.Group>
       </Form.Item>
 
-      <Form.Item<FieldType>
-        label="შესრულების თარიღი"
-        name="completion_date"
-        rules={[
-          { required: true, message: "გთხოვთ შეიყვანოთ შესრულების თარიღი" },
-        ]}
-      >
+      <Form.Item<FieldType> label="შესრულების თარიღი" name="completion_date">
         <DatePicker />
       </Form.Item>
 
