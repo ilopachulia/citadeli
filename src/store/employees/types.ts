@@ -7,3 +7,6 @@ export interface Employee {
   lastname: string;
   salary: number;
 }
+
+
+export type EmployeeCreatePayload = Omit<Employee, "created_at" | "id">;

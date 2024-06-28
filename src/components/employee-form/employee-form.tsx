@@ -1,10 +1,10 @@
 "use client";
-import { Button, DatePicker, Form, FormProps, Input, Radio } from "antd";
-import React, { useEffect } from "react";
+import { Button, DatePicker, Form, Input, Radio } from "antd";
+import React from "react";
 import { useUnit } from "effector-react";
-import { employeeCreated, employeeEdited } from "@/app/store/employees";
-import { Employee } from "@/app/store/employees/types";
-import moment from "moment";
+import { employeeCreated, employeeEdited } from "@/store/employees";
+import { Employee } from "@/store/employees/types";
+import dayjs from "dayjs";
 
 type FieldType = {
   firstname?: string;
@@ -30,7 +30,7 @@ export const EmployeeForm = (props: EmployeeFormProps) => {
     form.setFieldsValue({
       ...selectedEmployee,
       birthday: selectedEmployee.birthday
-        ? moment(selectedEmployee.birthday)
+        ? dayjs(selectedEmployee.birthday)
         : null,
     });
   }

@@ -1,29 +1,32 @@
 "use client";
 import { ColumnsType } from "antd/es/table";
-import { Employee } from "../store/employees/types";
+import { Employee } from "../../store/employees/types";
 import { useGate, useUnit } from "effector-react";
 import {
   $employees,
   $fetchingEmployees,
   $filteringEmployees,
   $genderFilters,
+  $isApplicationLoaded,
   $isModalOpen,
   $lastNameFilters,
   $nameFilters,
   $selectedEmployee,
-  MembersPageGate,
+  EmployeePageGate,
   employeeDeleted,
   employeeSelected,
   employeesFiltered,
   modalClosed,
   modalOpened,
-} from "../store/employees";
+} from "../../store/employees";
 import { Button, Modal, Popconfirm, Table } from "antd";
 import { Spin } from "antd";
-import { EmployeeForm } from "../components/employee-form";
+import { EmployeeForm } from "../../components/employee-form";
+import Link from "next/link";
+import Loading from "../loading";
 
 export default function EmployeesPage() {
-  useGate(MembersPageGate);
+  useGate(EmployeePageGate);
 
   const [isModalOpen, openModal, closeModal] = useUnit([
     $isModalOpen,
@@ -31,10 +34,17 @@ export default function EmployeesPage() {
     modalClosed,
   ]);
   const employees = useUnit($employees);
+
   const selectedEmployee = useUnit($selectedEmployee);
-  const selectEmployee = useUnit(employeeSelected);
-  const deleteEmployee = useUnit(employeeDeleted);
-  const isLoading = useUnit($fetchingEmployees);
+  const [selectEmployee, deleteEmployee] = useUnit([
+    employeeSelected,
+    employeeDeleted,
+  ]);
+
+  const [isLoading, isApplicationLoaded] = useUnit([
+    $fetchingEmployees,
+    $isApplicationLoaded,
+  ]);
   const filterEmployees = useUnit(employeesFiltered);
   const isFiltering = useUnit($filteringEmployees);
   const { nameFilters, lastNameFilters, genderFilters } = useUnit({
@@ -98,20 +108,25 @@ export default function EmployeesPage() {
     openModal();
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-w-screen min-h-screen flex justify-center items-center">
-        <Spin wrapperClassName="w-screen min-h-screen flex justify-center items-center" />
-      </div>
-    );
+  if (!isApplicationLoaded || isLoading) {
+    return <Loading />;
   }
 
   return (
     <main className="w-screen h-screen">
       <div className="flex flex-col gap-5 p-3">
-        <Button type="primary" className="self-end" onClick={handleAddEmployee}>
-          ახალი თანამშრომლის დამატება
-        </Button>
+        <div className="flex justify-between items-center">
+          <Link href="/" className="text-blue-500 hover:underline text-xl">
+            Home
+          </Link>
+          <Button
+            type="primary"
+            className="self-end"
+            onClick={handleAddEmployee}
+          >
+            ახალი თანამშრომლის დამატება
+          </Button>
+        </div>
 
         <Table
           rowKey={(row) => row.id}

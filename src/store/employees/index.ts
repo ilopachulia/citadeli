@@ -1,15 +1,24 @@
 import { attach, createEffect, sample } from "effector";
-import { app } from "../app/app";
-import { Employee } from "./types";
+import { Employee, EmployeeCreatePayload } from "./types";
 import { createGate } from "effector-react";
 import { FilterPayload } from "../../shared/types";
 import { constructQueryString } from "../../utils/construct-query-string";
-
-type EmployeeCreatePayload = Omit<Employee, "created_at" | "id">;
+import dayjs from "dayjs";
+import { app } from "../app";
 
 const employees = app.createDomain();
 
-export const MembersPageGate = createGate();
+export const EmployeePageGate = createGate();
+
+export const $isApplicationLoaded = employees.createStore(false);
+
+sample({
+  clock: EmployeePageGate.open,
+  fn() {
+    return true;
+  },
+  target: $isApplicationLoaded,
+});
 
 //for storing employees data
 export const $employees = employees.createStore<Employee[]>([]);
@@ -151,7 +160,7 @@ export const $fetchingEmployees = fetchEmployeesFx.pending;
 export const $filteringEmployees = filterEmployeesFx.pending;
 
 sample({
-  clock: MembersPageGate.open,
+  clock: EmployeePageGate.open,
   target: [fetchEmployeesFx],
 });
 
@@ -215,7 +224,10 @@ export const createEmployeFx = employees.createEffect(
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            ...body,
+            birthday: dayjs(body.birthday).format("YYYY-MM-DD"),
+          }),
         }
       );
       if (!response.ok) {
@@ -251,42 +263,37 @@ sample({
 export const employeeEdited = employees.createEvent<Employee>();
 
 export const editEmployeFx = attach({
-  source: $selectedEmployee,
-  effect: editEmployeeEffect,
-});
-
-async function editEmployeeEffect(
-  selectedEmployee: Employee | null,
-  body: Employee
-): Promise<Employee> {
-  if (!selectedEmployee) {
-    throw new Error("No employee selected to edit");
-  }
-
-  const { id } = selectedEmployee;
-
-  try {
-    const response = await fetch(
-      `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members/${id}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to update employee");
+  source: { selectedEmployee: $selectedEmployee },
+  effect: async ({ selectedEmployee }, body: Employee) => {
+    if (!selectedEmployee) {
+      throw new Error("No employee selected to edit");
     }
 
-    return (await response.json()) as Employee;
-  } catch (error) {
-    console.error("Error updating employee:", error);
-    throw error;
-  }
-}
+    const { id } = selectedEmployee;
+
+    try {
+      const response = await fetch(
+        `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update employee");
+      }
+
+      return (await response.json()) as Employee;
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      throw error;
+    }
+  },
+});
 
 sample({
   clock: employeeEdited,

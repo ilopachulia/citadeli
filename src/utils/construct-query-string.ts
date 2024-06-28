@@ -1,4 +1,4 @@
-import { FilterPayload } from "../shared/types";
+import { FilterPayload } from "@/shared/types";
 
 type Params = {
   firstname: string[];
