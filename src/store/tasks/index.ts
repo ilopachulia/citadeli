@@ -4,6 +4,8 @@ import { Task, TaskCreatePayload, TaskResponse } from "./types";
 import dayjs from "dayjs";
 import { fetchEmployeesFx } from "../employees";
 import { app } from "../app";
+import { FilterPayload } from "@/shared/types";
+import { isOverdue } from "@/shared/find-overdue-task";
 
 const tasks = app.createDomain();
 
@@ -88,6 +90,30 @@ export const $isModalOpen = tasks.createStore(false);
 export const modalClosed = tasks.createEvent();
 export const modalOpened = tasks.createEvent();
 
+sample({
+  clock: modalClosed,
+  fn() {
+    return false;
+  },
+  target: $isModalOpen,
+});
+
+sample({
+  clock: modalOpened,
+  fn() {
+    return true;
+  },
+  target: $isModalOpen,
+});
+
+sample({
+  clock: modalClosed,
+  fn() {
+    return null;
+  },
+  target: $selectedTask,
+});
+
 export const taskCreated = tasks.createEvent<TaskCreatePayload>();
 export const createTaskFx = tasks.createEffect(
   async (body: TaskCreatePayload) => {
@@ -119,6 +145,11 @@ export const createTaskFx = tasks.createEffect(
 sample({
   clock: taskCreated,
   target: createTaskFx,
+});
+
+sample({
+  clock: createTaskFx.doneData,
+  target: modalClosed,
 });
 
 export const taskEdited = tasks.createEvent<Partial<Task>>();
@@ -206,4 +237,75 @@ sample({
     return tasks.filter((tsk) => tsk.id !== deleted);
   },
   target: $tasks,
+});
+
+export const tasksFiltered = tasks.createEvent<FilterPayload>();
+
+//for storing filters data
+export const $titleFilters = tasks.createStore<
+  { text: string; value: string }[]
+>([]);
+
+export const $dateFilters = tasks.createStore<
+  { text: string; value: string }[]
+>([]);
+
+export const $statusFilters = tasks.createStore<
+  { text: string; value: string }[]
+>([]);
+
+export const $assigneeFilters = tasks.createStore<
+  { text: string; value: string }[]
+>([]);
+
+//setting filters
+sample({
+  clock: fetchTasksFx.doneData,
+  fn(data) {
+    return [...new Set(data.map((tsk) => tsk.title))].map((title) => ({
+      text: title,
+      value: title,
+    }));
+  },
+  target: $titleFilters,
+});
+
+sample({
+  clock: fetchTasksFx.doneData,
+  fn: () => [{ text: "ვადაგადაცილებული", value: "overdue" }],
+  target: $dateFilters,
+});
+
+sample({
+  clock: fetchTasksFx.doneData,
+  fn(data) {
+    return [...new Set(data.map((tsk) => tsk.status))].map((status) => ({
+      text: status,
+      value: status,
+    }));
+  },
+  target: $statusFilters,
+});
+
+sample({
+  clock: fetchTasksFx.doneData,
+  fn: (data) => {
+    const uniqueAssigneesMap = new Map();
+
+    data.forEach((tsk) => {
+      const assignee = tsk._assigned_member;
+      if (assignee) {
+        const assigneeId = assignee.id;
+        if (!uniqueAssigneesMap.has(assigneeId)) {
+          uniqueAssigneesMap.set(assigneeId, {
+            text: `${assignee.firstname} ${assignee.lastname}`,
+            value: assigneeId.toString(),
+          });
+        }
+      }
+    });
+
+    return Array.from(uniqueAssigneesMap.values());
+  },
+  target: $assigneeFilters,
 });
