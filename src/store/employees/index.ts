@@ -51,11 +51,11 @@ export const deleteEmployeeFx = createEffect(async (id: Employee["id"]) => {
       }
     );
     if (!response.ok) {
-      throw new Error("Failed to fetch members");
+      throw new Error("Failed to delete employees");
     }
     return id;
   } catch (error) {
-    console.error("Error fetching members:", error);
+    console.error("Error while deleting employee:", error);
     throw error;
   }
 });
@@ -91,11 +91,11 @@ export const filterEmployeesFx = createEffect(
         `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members?${params}`
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch members");
+        throw new Error("Failed to filter employees");
       }
       return (await response.json()) as Employee[];
     } catch (error) {
-      console.error("Error fetching members:", error);
+      console.error("Error while filtering employees:", error);
       throw error;
     }
   }
@@ -147,11 +147,11 @@ export const fetchEmployeesFx = createEffect(async () => {
       "https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members"
     );
     if (!response.ok) {
-      throw new Error("Failed to fetch members");
+      throw new Error("Failed to fetch employees");
     }
     return (await response.json()) as Employee[];
   } catch (error) {
-    console.error("Error fetching members:", error);
+    console.error("Error fetching employees:", error);
     throw error;
   }
 });
@@ -214,6 +214,7 @@ sample({
 
 export const employeeCreated =
   employees.createEvent<Partial<EmployeeCreatePayload>>();
+  
 export const createEmployeFx = employees.createEffect(
   async (body: Partial<EmployeeCreatePayload>) => {
     try {
@@ -231,11 +232,11 @@ export const createEmployeFx = employees.createEffect(
         }
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch members");
+        throw new Error("Failed to create employee");
       }
       return (await response.json()) as Employee;
     } catch (error) {
-      console.error("Error fetching members:", error);
+      console.error("Error while creating employee:", error);
       throw error;
     }
   }
@@ -289,7 +290,7 @@ export const editEmployeFx = attach({
 
       return (await response.json()) as Employee;
     } catch (error) {
-      console.error("Error updating employee:", error);
+      console.error("Error while updating employee:", error);
       throw error;
     }
   },

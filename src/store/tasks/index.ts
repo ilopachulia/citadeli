@@ -27,11 +27,11 @@ export const fetchTasksFx = createEffect(async () => {
       "https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/tasks"
     );
     if (!response.ok) {
-      throw new Error("Failed to fetch members");
+      throw new Error("Failed to fetch tasks");
     }
     return (await response.json()) as TaskResponse[];
   } catch (error) {
-    console.error("Error fetching members:", error);
+    console.error("Error fetching tasks:", error);
     throw error;
   }
 });
@@ -132,11 +132,11 @@ export const createTaskFx = tasks.createEffect(
         }
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch members");
+        throw new Error("Failed to create task");
       }
       return (await response.json()) as Task;
     } catch (error) {
-      console.error("Error fetching members:", error);
+      console.error("Error while creating task:", error);
       throw error;
     }
   }
@@ -158,7 +158,7 @@ export const editTaskFx = attach({
   source: { selectedTask: $selectedTask },
   effect: async ({ selectedTask }, body: Partial<Task>) => {
     if (!selectedTask) {
-      throw new Error("No employee selected to edit");
+      throw new Error("No task selected to edit");
     }
 
     const { id } = selectedTask;
@@ -176,12 +176,12 @@ export const editTaskFx = attach({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update employee");
+        throw new Error("Failed to update task");
       }
 
       return (await response.json()) as Task;
     } catch (error) {
-      console.error("Error updating employee:", error);
+      console.error("Error while updating task:", error);
       throw error;
     }
   },
@@ -220,7 +220,7 @@ export const deleteTaskFx = createEffect(async (id: Task["id"]) => {
     }
     return id;
   } catch (error) {
-    console.error("Error deleting tasks:", error);
+    console.error("Error deleting task:", error);
     throw error;
   }
 });
