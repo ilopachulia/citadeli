@@ -38,8 +38,6 @@ export default function TasksPage() {
     $isApplicationLoaded,
   ]);
 
-  const selectedTask = useUnit($selectedTask);
-
   const [selectTask, deleteTask] = useUnit([taskSelected, taskDeleted]);
 
   const filterTasks = useUnit(tasksFiltered);
@@ -105,7 +103,7 @@ export default function TasksPage() {
       render: (_, record) =>
         tasks.length >= 1 ? (
           <div className="flex items-center gap-2">
-            <Button onClick={() => handleEdit(record)}>Edit</Button>
+            <Button onClick={() => handleEdit(record.id)}>Edit</Button>
 
             <Popconfirm
               title="გსურთ წაშლა?"
@@ -122,8 +120,8 @@ export default function TasksPage() {
     openModal();
   };
 
-  const handleEdit = (task: Task) => {
-    selectTask(task);
+  const handleEdit = (taskId: Task["id"]) => {
+    selectTask(taskId);
     openModal();
   };
 
@@ -165,7 +163,7 @@ export default function TasksPage() {
         onOk={() => closeModal()}
         footer={null}
       >
-        <TaskForm onClose={closeModal} selectedTask={selectedTask} />
+        <TaskForm onClose={closeModal} />
       </Modal>
     </main>
   );

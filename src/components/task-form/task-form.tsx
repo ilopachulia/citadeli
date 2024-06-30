@@ -1,10 +1,15 @@
 "use client";
 import { Button, DatePicker, Form, Input, Radio, Select } from "antd";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useUnit } from "effector-react";
 import TextArea from "antd/es/input/TextArea";
-import { $assigneeOptions, taskCreated, taskEdited } from "@/store/tasks";
+import {
+  $assigneeOptions,
+  $selectedTask,
+  taskCreated,
+  taskEdited,
+} from "@/store/tasks";
 import dayjs from "dayjs";
 import { Task } from "@/store/tasks/types";
 
@@ -18,11 +23,12 @@ type FieldType = {
 
 export interface TaskFormProps {
   onClose: () => void;
-  selectedTask: Task | null;
 }
 
 export const TaskForm = (props: TaskFormProps) => {
-  const { onClose, selectedTask } = props;
+  const { onClose } = props;
+
+  const selectedTask = useUnit($selectedTask);
 
   const [form] = Form.useForm();
 
@@ -31,17 +37,19 @@ export const TaskForm = (props: TaskFormProps) => {
 
   const assigneeOptions = useUnit($assigneeOptions);
 
-  if (selectedTask) {
-    form.setFieldsValue({
-      ...selectedTask,
-      assigned_member_id: selectedTask?.assigned_member?.id
-        ? selectedTask.assigned_member.id
-        : null,
-      completion_date: selectedTask?.completion_date
-        ? dayjs(selectedTask.completion_date)
-        : null,
-    });
-  }
+  useEffect(() => {
+    if (selectedTask) {
+      form.setFieldsValue({
+        ...selectedTask,
+        assigned_member_id: selectedTask?._assigned_member?.id
+          ? selectedTask._assigned_member.id
+          : null,
+        completion_date: selectedTask?.completion_date
+          ? dayjs(selectedTask.completion_date)
+          : null,
+      });
+    }
+  }, [selectedTask, form]);
 
   return (
     <Form

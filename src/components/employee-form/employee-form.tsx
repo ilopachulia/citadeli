@@ -1,8 +1,12 @@
 "use client";
 import { Button, DatePicker, Form, Input, Radio } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import { useUnit } from "effector-react";
-import { employeeCreated, employeeEdited } from "@/store/employees";
+import {
+  $selectedEmployee,
+  employeeCreated,
+  employeeEdited,
+} from "@/store/employees";
 import { Employee } from "@/store/employees/types";
 import dayjs from "dayjs";
 
@@ -16,25 +20,28 @@ type FieldType = {
 
 export interface EmployeeFormProps {
   onClose: () => void;
-  selectedEmployee: Employee | null;
 }
 
 export const EmployeeForm = (props: EmployeeFormProps) => {
-  const { onClose, selectedEmployee } = props;
+  const { onClose } = props;
   const [form] = Form.useForm();
+
+  const selectedEmployee = useUnit($selectedEmployee);
 
   const onCreate = useUnit(employeeCreated);
   const onEdit = useUnit(employeeEdited);
 
-  if (selectedEmployee) {
-    form.setFieldsValue({
-      ...selectedEmployee,
-      birthday: selectedEmployee.birthday
-        ? dayjs(selectedEmployee.birthday)
-        : null,
-    });
-  }
-
+  useEffect(() => {
+    if (selectedEmployee) {
+      form.setFieldsValue({
+        ...selectedEmployee,
+        birthday: selectedEmployee.birthday
+          ? dayjs(selectedEmployee.birthday)
+          : null,
+      });
+    }
+  }, [form, selectedEmployee]);
+  
   return (
     <Form
       form={form}

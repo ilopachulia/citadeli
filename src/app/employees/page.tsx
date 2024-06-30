@@ -35,7 +35,6 @@ export default function EmployeesPage() {
   ]);
   const employees = useUnit($employees);
 
-  const selectedEmployee = useUnit($selectedEmployee);
   const [selectEmployee, deleteEmployee] = useUnit([
     employeeSelected,
     employeeDeleted,
@@ -86,7 +85,7 @@ export default function EmployeesPage() {
       render: (_, record) =>
         employees.length >= 1 ? (
           <div className="flex items-center gap-2">
-            <Button onClick={() => handleEdit(record)}>Edit</Button>
+            <Button onClick={() => handleEdit(record.id)}>Edit</Button>
 
             <Popconfirm
               title="გსურთ წაშლა?"
@@ -103,8 +102,8 @@ export default function EmployeesPage() {
     openModal();
   };
 
-  const handleEdit = (employee: Employee) => {
-    selectEmployee(employee);
+  const handleEdit = (employeeId: Employee["id"]) => {
+    selectEmployee(employeeId);
     openModal();
   };
 
@@ -116,10 +115,7 @@ export default function EmployeesPage() {
     <main className="w-screen h-screen">
       <div className="flex flex-col gap-5 p-3">
         <div className="flex justify-between items-center">
-          <Link
-            href="/tasks"
-            className="text-blue-500 hover:underline text-xl"
-          >
+          <Link href="/tasks" className="text-blue-500 hover:underline text-xl">
             <span>{"Tasks' Page"}</span>
           </Link>
           <Button
@@ -150,10 +146,7 @@ export default function EmployeesPage() {
         onOk={() => closeModal()}
         footer={null}
       >
-        <EmployeeForm
-          selectedEmployee={selectedEmployee}
-          onClose={closeModal}
-        />
+        <EmployeeForm onClose={closeModal} />
       </Modal>
     </main>
   );

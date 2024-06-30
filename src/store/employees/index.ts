@@ -12,6 +12,27 @@ export const EmployeePageGate = createGate();
 
 export const $isApplicationLoaded = employees.createStore(false);
 
+// for contolling modal state
+export const $isModalOpen = employees.createStore(false);
+export const modalClosed = employees.createEvent();
+export const modalOpened = employees.createEvent();
+
+sample({
+  clock: modalClosed,
+  fn() {
+    return false;
+  },
+  target: $isModalOpen,
+});
+
+sample({
+  clock: modalOpened,
+  fn() {
+    return true;
+  },
+  target: $isModalOpen,
+});
+
 sample({
   clock: EmployeePageGate.open,
   fn() {
@@ -22,9 +43,6 @@ sample({
 
 //for storing employees data
 export const $employees = employees.createStore<Employee[]>([]);
-
-//for editing employee's data
-export const $selectedEmployee = employees.createStore<Employee | null>(null);
 
 //for storing filters data
 export const $nameFilters = employees.createStore<
@@ -74,12 +92,96 @@ sample({
   target: $employees,
 });
 
-// set selected employee and request
-export const employeeSelected = employees.createEvent<Employee | null>();
-$selectedEmployee.on(employeeSelected, (_, employee) => employee);
+//for editing employee's data
+export const $selectedEmployee = employees.createStore<Employee | null>(null);
+
+export const employeeSelected = employees.createEvent<Employee["id"]>();
+
+export const selectEmployeeFx = createEffect(async (id: Employee["id"]) => {
+  const response = await fetch(
+    `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members/${id}`
+  );
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  const data = await response.json();
+  return data;
+});
+
+sample({
+  clock: employeeSelected,
+  target: selectEmployeeFx,
+});
+
+sample({
+  source: selectEmployeeFx.doneData,
+  target: $selectedEmployee,
+});
+
+sample({
+  clock: modalClosed,
+  fn() {
+    return null;
+  },
+  target: $selectedEmployee,
+});
+
+export const employeeEdited = employees.createEvent<Employee>();
+
+export const editEmployeFx = attach({
+  source: { selectedEmployee: $selectedEmployee },
+  effect: async ({ selectedEmployee }, body: Employee) => {
+    if (!selectedEmployee) {
+      throw new Error("No employee selected to edit");
+    }
+
+    const { id } = selectedEmployee;
+
+    try {
+      const response = await fetch(
+        `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update employee");
+      }
+
+      return (await response.json()) as Employee;
+    } catch (error) {
+      console.error("Error while updating employee:", error);
+      throw error;
+    }
+  },
+});
+
+sample({
+  clock: employeeEdited,
+  target: editEmployeFx,
+});
+
+sample({
+  clock: editEmployeFx.doneData,
+  target: modalClosed,
+});
+
+sample({
+  clock: editEmployeFx.doneData,
+  source: $employees,
+  fn: (currentEmployees, editedEmployee) =>
+    currentEmployees.map((emp) =>
+      emp.id === editedEmployee.id ? editedEmployee : emp
+    ),
+  target: $employees,
+});
 
 //filter event and request
-
 export const employeesFiltered = employees.createEvent<FilterPayload>();
 
 export const filterEmployeesFx = createEffect(
@@ -100,35 +202,6 @@ export const filterEmployeesFx = createEffect(
     }
   }
 );
-
-// for contolling modal state
-export const $isModalOpen = employees.createStore(false);
-export const modalClosed = employees.createEvent();
-export const modalOpened = employees.createEvent();
-
-sample({
-  clock: modalClosed,
-  fn() {
-    return false;
-  },
-  target: $isModalOpen,
-});
-
-sample({
-  clock: modalClosed,
-  fn() {
-    return null;
-  },
-  target: $selectedEmployee,
-});
-
-sample({
-  clock: modalOpened,
-  fn() {
-    return true;
-  },
-  target: $isModalOpen,
-});
 
 // requests
 sample({
@@ -266,59 +339,4 @@ sample({
 sample({
   clock: createEmployeFx.doneData,
   target: modalClosed,
-});
-
-export const employeeEdited = employees.createEvent<Employee>();
-
-export const editEmployeFx = attach({
-  source: { selectedEmployee: $selectedEmployee },
-  effect: async ({ selectedEmployee }, body: Employee) => {
-    if (!selectedEmployee) {
-      throw new Error("No employee selected to edit");
-    }
-
-    const { id } = selectedEmployee;
-
-    try {
-      const response = await fetch(
-        `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/members/${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update employee");
-      }
-
-      return (await response.json()) as Employee;
-    } catch (error) {
-      console.error("Error while updating employee:", error);
-      throw error;
-    }
-  },
-});
-
-sample({
-  clock: employeeEdited,
-  target: editEmployeFx,
-});
-
-sample({
-  clock: editEmployeFx.doneData,
-  target: modalClosed,
-});
-
-sample({
-  clock: editEmployeFx.doneData,
-  source: $employees,
-  fn: (currentEmployees, editedEmployee) =>
-    currentEmployees.map((emp) =>
-      emp.id === editedEmployee.id ? editedEmployee : emp
-    ),
-  target: $employees,
 });

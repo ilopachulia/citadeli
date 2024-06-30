@@ -15,11 +15,26 @@ export const $isApplicationLoaded = tasks.createStore(false);
 
 export const $tasks = tasks.createStore<Task[]>([]);
 
-export const $selectedTask = tasks.createStore<Task | null>(null);
+// for contolling modal state
+export const $isModalOpen = tasks.createStore(false);
+export const modalClosed = tasks.createEvent();
+export const modalOpened = tasks.createEvent();
 
-// set selected task and request
-export const taskSelected = tasks.createEvent<Task | null>();
-$selectedTask.on(taskSelected, (_, task) => task);
+sample({
+  clock: modalClosed,
+  fn() {
+    return false;
+  },
+  target: $isModalOpen,
+});
+
+sample({
+  clock: modalOpened,
+  fn() {
+    return true;
+  },
+  target: $isModalOpen,
+});
 
 export const fetchTasksFx = createEffect(async () => {
   try {
@@ -85,35 +100,6 @@ sample({
   target: $tasks,
 });
 
-// for contolling modal state
-export const $isModalOpen = tasks.createStore(false);
-export const modalClosed = tasks.createEvent();
-export const modalOpened = tasks.createEvent();
-
-sample({
-  clock: modalClosed,
-  fn() {
-    return false;
-  },
-  target: $isModalOpen,
-});
-
-sample({
-  clock: modalOpened,
-  fn() {
-    return true;
-  },
-  target: $isModalOpen,
-});
-
-sample({
-  clock: modalClosed,
-  fn() {
-    return null;
-  },
-  target: $selectedTask,
-});
-
 export const taskCreated = tasks.createEvent<TaskCreatePayload>();
 export const createTaskFx = tasks.createEffect(
   async (body: TaskCreatePayload) => {
@@ -166,6 +152,40 @@ sample({
 sample({
   clock: createTaskFx.doneData,
   target: modalClosed,
+});
+
+//for editing task's data
+export const $selectedTask = tasks.createStore<TaskResponse | null>(null);
+
+export const taskSelected = tasks.createEvent<Task["id"]>();
+
+export const selectTaskFx = createEffect(async (id: Task["id"]) => {
+  const response = await fetch(
+    `https://x8ki-letl-twmt.n7.xano.io/api:tSDGfQun/tasks/${id}`
+  );
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  const data = await response.json();
+  return data;
+});
+
+sample({
+  clock: taskSelected,
+  target: selectTaskFx,
+});
+
+sample({
+  source: selectTaskFx.doneData,
+  target: $selectedTask,
+});
+
+sample({
+  clock: modalClosed,
+  fn() {
+    return null;
+  },
+  target: $selectedTask,
 });
 
 export const taskEdited = tasks.createEvent<Partial<Task>>();
