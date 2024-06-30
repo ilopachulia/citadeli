@@ -214,7 +214,7 @@ sample({
 
 export const employeeCreated =
   employees.createEvent<Partial<EmployeeCreatePayload>>();
-  
+
 export const createEmployeFx = employees.createEffect(
   async (body: Partial<EmployeeCreatePayload>) => {
     try {
@@ -251,7 +251,14 @@ sample({
   clock: createEmployeFx.doneData,
   source: $employees,
   fn(employees, created) {
-    return [...employees, created];
+    console.log(created);
+    return [
+      ...employees,
+      {
+        ...created,
+        created_at: dayjs(created.created_at).format("YYYY-MM-DD"),
+      },
+    ];
   },
   target: $employees,
 });
