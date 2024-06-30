@@ -149,6 +149,22 @@ sample({
 
 sample({
   clock: createTaskFx.doneData,
+  source: $tasks,
+  fn(tasks, created) {
+    console.log(created);
+    return [
+      ...tasks,
+      {
+        ...created,
+        created_at: dayjs(created.created_at).format("YYYY-MM-DD"),
+      },
+    ];
+  },
+  target: $tasks,
+});
+
+sample({
+  clock: createTaskFx.doneData,
   target: modalClosed,
 });
 
