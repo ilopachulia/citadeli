@@ -12,6 +12,9 @@ export const EmployeePageGate = createGate();
 
 export const $isApplicationLoaded = employees.createStore(false);
 
+//for storing employees data
+export const $employees = employees.createStore<Employee[]>([]);
+
 // for contolling modal state
 export const $isModalOpen = employees.createStore(false);
 export const modalClosed = employees.createEvent();
@@ -40,22 +43,6 @@ sample({
   },
   target: $isApplicationLoaded,
 });
-
-//for storing employees data
-export const $employees = employees.createStore<Employee[]>([]);
-
-//for storing filters data
-export const $nameFilters = employees.createStore<
-  { text: string; value: string }[]
->([]);
-
-export const $lastNameFilters = employees.createStore<
-  { text: string; value: string }[]
->([]);
-
-export const $genderFilters = employees.createStore<
-  { text: string; value: string }[]
->([]);
 
 //delete event and request
 export const employeeDeleted = employees.createEvent<Employee["id"]>();
@@ -181,6 +168,19 @@ sample({
   target: $employees,
 });
 
+//for storing filters data
+export const $nameFilters = employees.createStore<
+  { text: string; value: string }[]
+>([]);
+
+export const $lastNameFilters = employees.createStore<
+  { text: string; value: string }[]
+>([]);
+
+export const $genderFilters = employees.createStore<
+  { text: string; value: string }[]
+>([]);
+
 //filter event and request
 export const employeesFiltered = employees.createEvent<FilterPayload>();
 
@@ -214,6 +214,8 @@ sample({
   target: $employees,
 });
 
+
+// fetching employees data
 export const fetchEmployeesFx = createEffect(async () => {
   try {
     const response = await fetch(

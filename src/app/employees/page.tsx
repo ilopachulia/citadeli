@@ -11,7 +11,6 @@ import {
   $isModalOpen,
   $lastNameFilters,
   $nameFilters,
-  $selectedEmployee,
   EmployeePageGate,
   employeeDeleted,
   employeeSelected,
@@ -40,12 +39,13 @@ export default function EmployeesPage() {
     employeeDeleted,
   ]);
 
-  const [isLoading, isApplicationLoaded] = useUnit([
+  const [isLoading, isApplicationLoaded, isFiltering] = useUnit([
     $fetchingEmployees,
     $isApplicationLoaded,
+    $filteringEmployees,
   ]);
+
   const filterEmployees = useUnit(employeesFiltered);
-  const isFiltering = useUnit($filteringEmployees);
   const { nameFilters, lastNameFilters, genderFilters } = useUnit({
     nameFilters: $nameFilters,
     lastNameFilters: $lastNameFilters,

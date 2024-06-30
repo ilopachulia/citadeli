@@ -100,6 +100,7 @@ sample({
   target: $tasks,
 });
 
+// creating new task
 export const taskCreated = tasks.createEvent<TaskCreatePayload>();
 export const createTaskFx = tasks.createEffect(
   async (body: TaskCreatePayload) => {
@@ -241,6 +242,8 @@ sample({
   target: $tasks,
 });
 
+
+// deleting existing task
 export const taskDeleted = tasks.createEvent<Task["id"]>();
 
 export const deleteTaskFx = createEffect(async (id: Task["id"]) => {
@@ -275,6 +278,8 @@ sample({
   target: $tasks,
 });
 
+
+// for filtering tasks
 export const tasksFiltered = tasks.createEvent<FilterPayload>();
 
 //for storing filters data

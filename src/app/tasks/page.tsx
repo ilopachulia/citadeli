@@ -8,7 +8,6 @@ import {
   $dateFilters,
   $isApplicationLoaded,
   $isTasksFetching,
-  $selectedTask,
   $statusFilters,
   $tasks,
   $titleFilters,
@@ -20,8 +19,8 @@ import {
 import { Task } from "../../store/tasks/types";
 import { TaskForm } from "../../components/task-form";
 import Link from "next/link";
-import Loading from "../loading";
 import { isOverdue } from "@/shared/find-overdue-task";
+import Loading from "../loading";
 
 export default function TasksPage() {
   useGate(TasksPageGate);
@@ -41,7 +40,6 @@ export default function TasksPage() {
   const [selectTask, deleteTask] = useUnit([taskSelected, taskDeleted]);
 
   const filterTasks = useUnit(tasksFiltered);
-  // const isFiltering = useUnit($filteringTasks);
 
   const { titleFilters, dateFilters, statusFilters, assigneeFilters } = useUnit(
     {
@@ -71,17 +69,11 @@ export default function TasksPage() {
       key: "completion_date",
       filters: dateFilters,
       onFilter: (_, record) => isOverdue(record),
-      render: (text, record) => {
-        const overdue = isOverdue(record);
-        return {
-          props: {
-            style: {
-              backgroundColor: overdue ? "lightcoral" : "lightgreen",
-            },
-          },
-          children: text,
-        };
-      },
+      onCell: (record) => ({
+        style: {
+          backgroundColor: isOverdue(record) ? "lightcoral" : "lightgreen",
+        },
+      }),
     },
     {
       title: "სტატუსი",
@@ -146,7 +138,6 @@ export default function TasksPage() {
 
         <Table
           rowKey={(row) => row.id}
-          // loading={isFiltering}
           columns={columns}
           dataSource={tasks}
           scroll={{ y: 500 }}
